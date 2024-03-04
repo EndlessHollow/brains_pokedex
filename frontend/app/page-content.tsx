@@ -1,7 +1,5 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
 import { usePokemons } from "./lib/context";
 import Header from "./ui/header/header";
 import List from "./ui/list/list";
@@ -14,7 +12,7 @@ export default function PageContent() {
     pokemons,
     gridView,
     setActiveTab,
-    fetchMore,
+    loadMore,
     totalCount,
     handleFavorite,
   } = usePokemons();
@@ -32,7 +30,7 @@ export default function PageContent() {
         <List
           pokemons={pokemons}
           className="max-w-7xl mx-auto px-6"
-          fetchMore={fetchMore}
+          loadMore={loadMore}
           totalCount={totalCount}
           handleFavorite={handleFavorite}
           gridView={gridView}
@@ -53,7 +51,7 @@ export default function PageContent() {
         <List
           pokemons={pokemons}
           className="max-w-7xl mx-auto px-6"
-          fetchMore={fetchMore}
+          loadMore={loadMore}
           totalCount={totalCount}
           handleFavorite={handleFavorite}
           gridView={gridView}
