@@ -1,7 +1,5 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { TPokemon } from "./types";
 import { useDebounce } from "use-debounce";
@@ -21,7 +19,7 @@ type CtxProps = {
   pokemons: TPokemon[];
   totalCount: number;
   pokemonType: string;
-  fetchMore: FetchMoreFunction<TPokemonsQueryResponse, OperationVariables>;
+  loadMore: () => void;
   searchTerm: string;
   debouncedSearchTerm: string;
   gridView: boolean;
@@ -230,6 +228,31 @@ export function PokemonsProvider(props: Props) {
     }
   }
 
+  function loadMore() {
+    fetchMore?.({
+      variables: {
+        query: {
+          limit: 50,
+          offset: pokemons.length || 0,
+        },
+      },
+      updateQuery: (prevResult, { fetchMoreResult }) => {
+        if (!fetchMoreResult) return prevResult;
+        return {
+          ...prevResult,
+          pokemons: {
+            ...prevResult.pokemons,
+            edges: [
+              ...prevResult.pokemons.edges,
+              ...fetchMoreResult.pokemons.edges,
+            ],
+            count: fetchMoreResult.pokemons.count,
+          },
+        };
+      },
+    });
+  }
+
   useEffect(() => {
     const params = new URLSearchParams(searchParams);
     if (params.has("filter")) {
@@ -250,7 +273,7 @@ export function PokemonsProvider(props: Props) {
   const value = {
     pokemons,
     totalCount,
-    fetchMore,
+    loadMore,
     pokemonType,
     searchTerm,
     debouncedSearchTerm,

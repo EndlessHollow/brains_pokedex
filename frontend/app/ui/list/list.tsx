@@ -1,19 +1,14 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
-import { OperationVariables } from "@apollo/client";
 import ListItem from "./list-item";
 import { TPokemon } from "@/app/lib/types";
-import { FetchMoreFunction } from "@apollo/client/react/hooks/useSuspenseQuery";
 import { Spinner, cn } from "@nextui-org/react";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { TPokemonsQueryResponse } from "@/app/api/types";
 
 type Props = {
   pokemons: TPokemon[];
   handleFavorite: (id: string, isFavorite: boolean) => void;
-  fetchMore?: FetchMoreFunction<TPokemonsQueryResponse, OperationVariables>;
+  loadMore?: () => void;
   totalCount?: number;
   gridView?: boolean;
   hasPreview?: boolean;
@@ -25,7 +20,7 @@ export default function List(props: Props) {
   const {
     pokemons,
     className,
-    fetchMore,
+    loadMore,
     totalCount,
     handleFavorite,
     gridView = true,
@@ -35,40 +30,18 @@ export default function List(props: Props) {
 
   const hasMore = pokemons.length !== totalCount;
 
-  function loadMore() {
-    fetchMore?.({
-      variables: {
-        query: {
-          limit: 50,
-          offset: pokemons.length || 0,
-        },
-      },
-      updateQuery: (prevResult, { fetchMoreResult }) => {
-        if (!fetchMoreResult) return prevResult;
-        return {
-          ...prevResult,
-          pokemons: {
-            ...prevResult.pokemons,
-            edges: [
-              ...prevResult.pokemons.edges,
-              ...fetchMoreResult.pokemons.edges,
-            ],
-            count: fetchMoreResult.pokemons.count,
-          },
-        };
-      },
-    });
-  }
-
-  if (!infiniteScroll) {
+  if (infiniteScroll && loadMore) {
     return (
-      <ul
+      <InfiniteScroll
+        dataLength={pokemons.length}
+        next={() => loadMore && loadMore()}
+        hasMore={hasMore}
+        loader={<Spinner />}
         className={cn(
           "grid gap-6 pb-6",
           {
             [gridViewStyles]: gridView,
           },
-
           className,
         )}
       >
@@ -78,25 +51,23 @@ export default function List(props: Props) {
               key={pokemon.name}
               pokemon={pokemon}
               gridView={gridView}
+              hasPreview={hasPreview}
               handleFavorite={handleFavorite}
             />
           );
         })}
-      </ul>
+      </InfiniteScroll>
     );
   }
 
   return (
-    <InfiniteScroll
-      dataLength={pokemons.length}
-      next={loadMore}
-      hasMore={hasMore}
-      loader={<Spinner />}
+    <ul
       className={cn(
         "grid gap-6 pb-6",
         {
           [gridViewStyles]: gridView,
         },
+
         className,
       )}
     >
@@ -106,12 +77,11 @@ export default function List(props: Props) {
             key={pokemon.name}
             pokemon={pokemon}
             gridView={gridView}
-            hasPreview={hasPreview}
             handleFavorite={handleFavorite}
           />
         );
       })}
-    </InfiniteScroll>
+    </ul>
   );
 }
 
